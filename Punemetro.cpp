@@ -22,9 +22,10 @@ int getStationIndex(const string& stationName, const vector<string>& stations) {
 }
 
 // Function to implement Dijkstra's algorithm
-vector<double> dijkstra(const vector<vector<double>>& distanceMatrix, int source) {
+pair<vector<double>, vector<int>> dijkstra(const vector<vector<double>>& distanceMatrix, int source) {
     int numStations = distanceMatrix.size();
     vector<double> distances(numStations, INF); // Distances from source to all stations
+    vector<int> previous(numStations, -1); // To store the path
     distances[source] = 0; // Distance to source is 0
 
     vector<bool> visited(numStations, false); // Visited stations
@@ -47,12 +48,26 @@ vector<double> dijkstra(const vector<vector<double>>& distanceMatrix, int source
             // Update distance if there's an edge and it improves the path
             if (distanceMatrix[currentStation][neighbor] != 0 && distances[currentStation] + distanceMatrix[currentStation][neighbor] < distances[neighbor]) {
                 distances[neighbor] = distances[currentStation] + distanceMatrix[currentStation][neighbor];
+                previous[neighbor] = currentStation; // Store the path
                 pq.push({distances[neighbor], neighbor});
             }
         }
     }
 
-    return distances;
+    return {distances, previous};
+}
+
+// Function to get the path from the source to the destination
+vector<int> getPath(int source, int destination, const vector<int>& previous) {
+    vector<int> path;
+    for (int at = destination; at != -1; at = previous[at]) {
+        path.push_back(at);
+    }
+    reverse(path.begin(), path.end());
+    if (path[0] == source) {
+        return path;
+    }
+    return {}; // Return empty path if there's no valid path from source to destination
 }
 
 int main() {
@@ -80,48 +95,57 @@ int main() {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.95, 0, 1.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.5, 0, 1.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.5, 0, 1.8, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.8, 0, 0.95, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.95, 0, 0.65, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.65, 0, 0.75, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.75, 0, 2.9, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.1, 0, 0, 0, 0, 0, 0, 0, 2.9, 0, 0.8, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.8, 0, 0, 0.7, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.8, 0.7, 0, 1, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 3.1, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3.1, 0, 2},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.8, 0, 1.1, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.1, 0, 1.4, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.4, 0, 1.1, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.1, 0, 1.2, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.2, 0, 1.3, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.3, 0, 1.2, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.2, 0, 0.9, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.9, 0, 1.2, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.2, 0, 1.5},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.5, 0}
     };
 
-    // Get source and destination from user
+    // Ask user for source and destination stations
     string sourceStation, destinationStation;
     cout << "Enter source station: ";
     getline(cin, sourceStation);
     cout << "Enter destination station: ";
     getline(cin, destinationStation);
 
-    // Convert station names to lower case for case-insensitive comparison
+    // Convert input to lowercase for case-insensitive comparison
     transform(sourceStation.begin(), sourceStation.end(), sourceStation.begin(), ::tolower);
     transform(destinationStation.begin(), destinationStation.end(), destinationStation.begin(), ::tolower);
 
-    // Find the indices of the source and destination stations
     int sourceIndex = getStationIndex(sourceStation, stations);
     int destinationIndex = getStationIndex(destinationStation, stations);
 
     if (sourceIndex == -1 || destinationIndex == -1) {
-        cout << "Invalid station name(s). Please check the input." << endl;
+        cout << "Invalid source or destination station name." << endl;
         return 1;
     }
 
-    // Run Dijkstra's algorithm to find shortest paths from the source station
-    vector<double> distances = dijkstra(distanceMatrix, sourceIndex);
+    // Run Dijkstra's algorithm to find the shortest paths from the source
+    auto result = dijkstra(distanceMatrix, sourceIndex);
+    vector<double> distances = result.first;
+    vector<int> previous = result.second;
 
-    // Output the distance to the destination station
-    double distance = distances[destinationIndex];
-    if (distance == INF) {
-        cout << "No path found from " << sourceStation << " to " << destinationStation << "." << endl;
+    if (distances[destinationIndex] == INF) {
+        cout << "No path exists between " << stations[sourceIndex] << " and " << stations[destinationIndex] << "." << endl;
     } else {
-        cout << "Shortest distance from " << sourceStation << " to " << destinationStation << " is " << distance << " km." << endl;
+        cout << "The shortest distance from " << stations[sourceIndex] << " to " << stations[destinationIndex] << " is " << distances[destinationIndex] << " km." << endl;
+        
+        // Get and print the path
+        vector<int> path = getPath(sourceIndex, destinationIndex, previous);
+        cout << "Path: ";
+        for (int i = 0; i < path.size(); i++) {
+            cout << stations[path[i]];
+            if (i < path.size() - 1) {
+                cout << " -> ";
+            }
+        }
+        cout << endl;
     }
 
     return 0;
