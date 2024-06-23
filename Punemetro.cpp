@@ -107,6 +107,24 @@ double calculatePathDistance(const vector<string>& path, const unordered_map<str
     return distances.at(path.back());
 }
 
+double calculateFare(double distance, bool hasNcmcCard) {
+    double fare = 0.0;
+    if (distance <= 1) {
+        fare = hasNcmcCard ? 9 : 10;
+    } else if (distance <= 2) {
+        fare = hasNcmcCard ? 13.5 : 15;
+    } else if (distance <= 4) {
+        fare = hasNcmcCard ? 18 : 20;
+    } else if (distance <= 8) {
+        fare = hasNcmcCard ? 22.5 : 25;
+    } else if (distance <= 16) {
+        fare = hasNcmcCard ? 27 : 30;
+    } else {
+        fare = hasNcmcCard ? 32.5 : 35;
+    }
+    return fare;
+}
+
 int main() {
     // Initialize the graph with distances
     addEdge("PCMC", "Sant Tukaram Nagar", 5.4);
@@ -161,5 +179,16 @@ int main() {
     cout << "Number of switches: " << switches << endl;
     cout << "Total distance: " << totalDistance << " km" << endl;
 
+    // Ask the user if they have an NCMC card
+    string hasNcmcCardStr;
+    cout << "Do you have an NCMC card? (yes/no): ";
+    getline(cin, hasNcmcCardStr);
+    bool hasNcmcCard = (hasNcmcCardStr == "yes");
+
+    // Calculate and display the fare
+    double fare = calculateFare(totalDistance, hasNcmcCard);
+    cout << "Total fare: ₹" << fare << endl;
+
     return 0;
 }
+
